@@ -1,4 +1,4 @@
-FROM rust:1.38 AS builder
+FROM rust:1.60 AS builder
 
 WORKDIR /flowgger
 COPY . .
