@@ -8,15 +8,9 @@ WORKDIR /flowgger
 COPY . .
 
 # Install necessary dependencies and build the project
-#RUN apt-get update && \
-#    apt-get install -y capnproto libssl-dev pkg-config && \
-#    cargo build --release && \
-#    strip target/release/flowgger
-RUN apk add --nocache \
-    canproto \
-    musl-dev \
-    build-base && \
-    cargo build -- release && \
+RUN apt-get update && \
+    apt-get install -y capnproto libssl-dev pkg-config && \
+    cargo build --release && \
     strip target/release/flowgger
 
 
