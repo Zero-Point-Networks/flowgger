@@ -10,8 +10,13 @@ COPY . .
 # Install necessary dependencies and build the project
 RUN apt-get update && \
     apt-get install -y capnproto libssl-dev pkg-config musl-tools && \
+    curl -LO https://musl.libc.org/releases/musl-1.2.5.tar.gz &&
+    tar -xzf musl-1.2.5.tar.gz && \
+    cd musl-1.2.5 && \
+    ./configure && make && make install && \
     rustup target add aarch64-unknown-linux-musl && \
     CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=musl-gcc \
+    OPENSSL_DIR=/usr/local/musl \
     cargo build --release --target=aarch64-unknown-linux-musl && \
     strip target/aarch64-unknown-linux-gnu#/release/flowgger
 
