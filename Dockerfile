@@ -8,22 +8,34 @@ WORKDIR /flowgger
 COPY . .
 
 # Install necessary dependencies and build the project
-RUN apt-get update && \
-    apt-get install -y capnproto libssl-dev pkg-config && \
-    cargo build --release && \
+#RUN apt-get update && \
+#    apt-get install -y capnproto libssl-dev pkg-config && \
+#    cargo build --release && \
+#    strip target/release/flowgger
+RUN apk add --nocache \
+    canproto \
+    musl-dev \
+    build-base && \
+    cargo build -- release && \
     strip target/release/flowgger
 
+
 # Step 2: Use Ubuntu 22.04 as the runtime environment
-FROM ubuntu:22.04
-LABEL maintainer="Frank Denis, Damian Czaja <trojan295@gmail.com>"
+#FROM ubuntu:22.04
+#LABEL maintainer="Frank Denis, Damian Czaja <trojan295@gmail.com>"
+
+FROM alpine:latest
+LABEL maintainer="Russell Hurren <russell@zeropointnetworks.com>"
 
 # Set working directory for runtime
 WORKDIR /opt/flowgger
 
 # Install OpenSSL 3 and other runtime dependencies
-RUN apt-get update && \
-    apt-get install -y libssl3 && \
-    rm -rf /var/lib/apt/lists/*
+#RUN apt-get update && \
+#    apt-get install -y libssl3 && \
+#    rm -rf /var/lib/apt/lists/*
+
+RUN apk add --no-cache libssl3
 
 # Copy the built Flowgger binary from the builder stage
 COPY --from=builder /flowgger/target/release/flowgger /opt/flowgger/bin/flowgger
@@ -31,6 +43,12 @@ COPY --from=builder /flowgger/target/release/flowgger /opt/flowgger/bin/flowgger
 # Copy the configuration file and entrypoint script
 COPY flowgger.toml /opt/flowgger/etc/flowgger.toml
 COPY entrypoint.sh /
+
+# Ensure entrypoint script has execute permissions
+RUN chmod +x /entrypoint.sh
+
+# Expose default ports for Syslog and IPFIX
+EXPOSE 514/udp 4730/udp
 
 # Define the entrypoint and command for the container
 ENTRYPOINT ["/entrypoint.sh"]
